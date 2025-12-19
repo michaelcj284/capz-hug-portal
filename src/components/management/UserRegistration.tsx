@@ -13,7 +13,7 @@ const UserRegistration = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'admin' | 'staff' | 'student'>('student');
+  const [role, setRole] = useState<'admin' | 'staff' | 'student' | 'instructor'>('student');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -57,11 +57,12 @@ const UserRegistration = () => {
           if (studentError) {
             console.error('Error creating student record:', studentError);
           }
-        } else if (role === 'staff') {
+        } else if (role === 'staff' || role === 'instructor') {
           const { error: staffError } = await supabase
             .from('staff')
             .insert({
               user_id: authData.user.id,
+              position: role === 'instructor' ? 'Instructor' : undefined,
             });
 
           if (staffError) {
@@ -140,6 +141,7 @@ const UserRegistration = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="student">Student</SelectItem>
+                  <SelectItem value="instructor">Instructor</SelectItem>
                   <SelectItem value="staff">Staff</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>

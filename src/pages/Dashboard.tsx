@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import StaffDashboard from '@/components/dashboards/StaffDashboard';
 import StudentDashboard from '@/components/dashboards/StudentDashboard';
+import InstructorDashboard from '@/components/dashboards/InstructorDashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
@@ -41,6 +42,8 @@ const Dashboard = () => {
         return <AdminDashboard />;
       case 'staff':
         return <StaffDashboard />;
+      case 'instructor':
+        return <InstructorDashboard />;
       case 'student':
         return <StudentDashboard />;
       default:
