@@ -7,6 +7,7 @@ import { LogOut, BookOpen, Calendar, Users, ClipboardCheck, GraduationCap } from
 import ChangePassword from '@/components/profile/ChangePassword';
 import ClassScheduling from '@/components/management/ClassScheduling';
 import AttendanceManagement from '@/components/management/AttendanceManagement';
+import GeneralAttendanceScanner from '@/components/attendance/GeneralAttendanceScanner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -90,7 +91,7 @@ const InstructorDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview" className="gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -102,6 +103,10 @@ const InstructorDashboard = () => {
             <TabsTrigger value="attendance" className="gap-2">
               <ClipboardCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Attendance</span>
+            </TabsTrigger>
+            <TabsTrigger value="my-attendance" className="gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Mark Attendance</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Users className="h-4 w-4" />
@@ -206,6 +211,10 @@ const InstructorDashboard = () => {
 
           <TabsContent value="attendance">
             <AttendanceManagement />
+          </TabsContent>
+
+          <TabsContent value="my-attendance">
+            <GeneralAttendanceScanner userType="instructor" />
           </TabsContent>
 
           <TabsContent value="settings">
