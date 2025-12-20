@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Calendar, QrCode, LogOut, CheckCircle, Settings, Award, Bell } from 'lucide-react';
 import QRCodeScanner from '@/components/attendance/QRCodeScanner';
+import GeneralAttendanceScanner from '@/components/attendance/GeneralAttendanceScanner';
 import StudentResults from '@/components/student/StudentResults';
 import StudentAttendance from '@/components/student/StudentAttendance';
 import StudentCourses from '@/components/student/StudentCourses';
@@ -159,7 +160,10 @@ const StudentDashboard = () => {
             <StudentAttendance studentId={studentData?.id} />
           </TabsContent>
           <TabsContent value="scan">
-            <QRCodeScanner studentId={studentData?.id} />
+            <div className="space-y-6">
+              <QRCodeScanner studentId={studentData?.id} />
+              <GeneralAttendanceScanner userType="student" />
+            </div>
           </TabsContent>
           <TabsContent value="certificates">
             <StudentCertificates studentId={studentData?.id} />

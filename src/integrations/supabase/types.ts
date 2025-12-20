@@ -263,6 +263,74 @@ export type Database = {
           },
         ]
       }
+      general_attendance: {
+        Row: {
+          attendance_date: string
+          check_in_time: string
+          created_at: string
+          id: string
+          qr_code_id: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          attendance_date?: string
+          check_in_time?: string
+          created_at?: string
+          id?: string
+          qr_code_id: string
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          attendance_date?: string
+          check_in_time?: string
+          created_at?: string
+          id?: string
+          qr_code_id?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_attendance_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "general_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_qr_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null

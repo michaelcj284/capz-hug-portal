@@ -9,6 +9,7 @@ import CourseManagement from '@/components/management/CourseManagement';
 import ExamManagement from '@/components/management/ExamManagement';
 import AttendanceManagement from '@/components/management/AttendanceManagement';
 import QRCodeGenerator from '@/components/attendance/QRCodeGenerator';
+import GeneralAttendanceScanner from '@/components/attendance/GeneralAttendanceScanner';
 import ClassScheduling from '@/components/management/ClassScheduling';
 import ChangePassword from '@/components/profile/ChangePassword';
 
@@ -105,7 +106,7 @@ const StaffDashboard = () => {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid grid-cols-3 lg:grid-cols-6 gap-2 h-auto">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-7 gap-2 h-auto">
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden lg:inline">Courses</span>
@@ -121,6 +122,10 @@ const StaffDashboard = () => {
             <TabsTrigger value="qrcode" className="flex items-center gap-2">
               <QrCode className="h-4 w-4" />
               <span className="hidden lg:inline">QR Code</span>
+            </TabsTrigger>
+            <TabsTrigger value="my-attendance" className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              <span className="hidden lg:inline">Mark Attendance</span>
             </TabsTrigger>
             <TabsTrigger value="schedule" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -143,6 +148,9 @@ const StaffDashboard = () => {
           </TabsContent>
           <TabsContent value="qrcode">
             <QRCodeGenerator />
+          </TabsContent>
+          <TabsContent value="my-attendance">
+            <GeneralAttendanceScanner userType="staff" />
           </TabsContent>
           <TabsContent value="schedule">
             <ClassScheduling />

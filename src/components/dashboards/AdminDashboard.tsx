@@ -12,6 +12,8 @@ import CourseManagement from '@/components/management/CourseManagement';
 import ExamManagement from '@/components/management/ExamManagement';
 import AttendanceManagement from '@/components/management/AttendanceManagement';
 import QRCodeGenerator from '@/components/attendance/QRCodeGenerator';
+import GeneralQRCodeManager from '@/components/attendance/GeneralQRCodeManager';
+import GeneralAttendanceScanner from '@/components/attendance/GeneralAttendanceScanner';
 import CertificateManagement from '@/components/management/CertificateManagement';
 import ClassScheduling from '@/components/management/ClassScheduling';
 
@@ -111,7 +113,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="register" className="space-y-6">
-          <TabsList className="grid grid-cols-5 lg:grid-cols-9 gap-2 h-auto">
+          <TabsList className="grid grid-cols-5 lg:grid-cols-11 gap-2 h-auto">
             <TabsTrigger value="register" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
               <span className="hidden lg:inline">Register</span>
@@ -138,7 +140,15 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="qrcode" className="flex items-center gap-2">
               <QrCode className="h-4 w-4" />
-              <span className="hidden lg:inline">QR Code</span>
+              <span className="hidden lg:inline">Course QR</span>
+            </TabsTrigger>
+            <TabsTrigger value="general-qr" className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              <span className="hidden lg:inline">General QR</span>
+            </TabsTrigger>
+            <TabsTrigger value="my-attendance" className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              <span className="hidden lg:inline">My Attendance</span>
             </TabsTrigger>
             <TabsTrigger value="certificates" className="flex items-center gap-2">
               <Award className="h-4 w-4" />
@@ -170,6 +180,12 @@ const AdminDashboard = () => {
           </TabsContent>
           <TabsContent value="qrcode">
             <QRCodeGenerator />
+          </TabsContent>
+          <TabsContent value="general-qr">
+            <GeneralQRCodeManager />
+          </TabsContent>
+          <TabsContent value="my-attendance">
+            <GeneralAttendanceScanner userType="admin" />
           </TabsContent>
           <TabsContent value="certificates">
             <CertificateManagement />
