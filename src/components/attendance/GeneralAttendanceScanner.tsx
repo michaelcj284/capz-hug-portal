@@ -115,41 +115,43 @@ const GeneralAttendanceScanner = ({ userType }: GeneralAttendanceScannerProps) =
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" />
-          Mark General Attendance
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="general-code">Enter General Attendance Code</Label>
-            <Input
-              id="general-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="WEBCAPZ-GEN-XXXXXXXX"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              'Marking...'
-            ) : (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Mark Attendance
-              </>
-            )}
-          </Button>
-        </form>
-        <p className="text-sm text-muted-foreground mt-4 text-center">
-          Use the general attendance code to mark your daily attendance
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex justify-center w-full">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" />
+            Mark General Attendance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="general-code">Enter General Attendance Code</Label>
+              <Input
+                id="general-code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="WEBCAPZ-GEN-XXXXXXXX"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                'Marking...'
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Mark Attendance
+                </>
+              )}
+            </Button>
+          </form>
+          <p className="text-sm text-muted-foreground mt-4 text-center">
+            Use the general attendance code to mark your daily attendance
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

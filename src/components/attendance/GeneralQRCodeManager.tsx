@@ -126,116 +126,123 @@ const GeneralQRCodeManager = () => {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" />
-          General QR Codes (Non-Expiring)
-        </CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create New
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create General QR Code</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Main Campus Attendance"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter a description for this QR code..."
-                />
-              </div>
-              <Button onClick={handleCreate} className="w-full" disabled={creating}>
-                {creating ? 'Creating...' : 'Create QR Code'}
+    <div className="flex justify-center w-full">
+      <Card className="w-full max-w-4xl">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" />
+            General QR Codes (Non-Expiring)
+          </CardTitle>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                Create New
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          These QR codes never expire and can be used by all users (students, instructors, staff, admins) to mark attendance.
-        </p>
-        
-        {qrCodes.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No general QR codes created yet. Click "Create New" to add one.
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create General QR Code</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Main Campus Attendance"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter a description for this QR code..."
+                  />
+                </div>
+                <Button onClick={handleCreate} className="w-full" disabled={creating}>
+                  {creating ? 'Creating...' : 'Create QR Code'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            These QR codes never expire and can be used by all users (students, instructors, staff, admins) to mark attendance.
           </p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {qrCodes.map((qr) => (
-                <TableRow key={qr.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{qr.name}</p>
-                      {qr.description && (
-                        <p className="text-sm text-muted-foreground">{qr.description}</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">{qr.code}</code>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={qr.is_active ? 'default' : 'secondary'}>
-                      {qr.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(qr.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(qr.code)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={qr.is_active ? 'destructive' : 'default'}
-                        size="sm"
-                        onClick={() => toggleActive(qr.id, qr.is_active)}
-                      >
-                        {qr.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+          
+          {qrCodes.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              No general QR codes created yet. Click "Create New" to add one.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Code</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {qrCodes.map((qr) => (
+                    <TableRow key={qr.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{qr.name}</p>
+                          {qr.description && (
+                            <p className="text-sm text-muted-foreground">{qr.description}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground sm:hidden mt-1">
+                            <code className="bg-muted px-1 py-0.5 rounded">{qr.code}</code>
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <code className="text-sm bg-muted px-2 py-1 rounded">{qr.code}</code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={qr.is_active ? 'default' : 'secondary'}>
+                          {qr.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {new Date(qr.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(qr.code)}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant={qr.is_active ? 'destructive' : 'default'}
+                            size="sm"
+                            onClick={() => toggleActive(qr.id, qr.is_active)}
+                          >
+                            {qr.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
