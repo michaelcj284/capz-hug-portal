@@ -28,10 +28,6 @@ const GeneralQRCodeManager = () => {
   const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    fetchQRCodes();
-  }, []);
-
   const fetchQRCodes = async () => {
     const { data, error } = await supabase
       .from('general_qr_codes')
@@ -43,6 +39,30 @@ const GeneralQRCodeManager = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchQRCodes();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('qr-codes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'general_qr_codes'
+        },
+        () => {
+          fetchQRCodes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

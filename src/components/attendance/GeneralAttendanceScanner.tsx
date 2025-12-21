@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, CheckCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QrCode, CheckCircle, Camera, Keyboard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import QRCameraScanner from './QRCameraScanner';
 
 interface GeneralAttendanceScannerProps {
   userType: 'student' | 'instructor' | 'staff' | 'admin';
@@ -124,30 +126,50 @@ const GeneralAttendanceScanner = ({ userType }: GeneralAttendanceScannerProps) =
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="general-code">Enter General Attendance Code</Label>
-              <Input
-                id="general-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="WEBCAPZ-GEN-XXXXXXXX"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                'Marking...'
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Mark Attendance
-                </>
-              )}
-            </Button>
-          </form>
+          <Tabs defaultValue="camera" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="camera" className="flex items-center gap-2">
+                <Camera className="h-4 w-4" />
+                Scan QR
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="flex items-center gap-2">
+                <Keyboard className="h-4 w-4" />
+                Enter Code
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="camera" className="mt-4">
+              <QRCameraScanner userType={userType} />
+            </TabsContent>
+            
+            <TabsContent value="manual" className="mt-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="general-code">Enter General Attendance Code</Label>
+                  <Input
+                    id="general-code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="WEBCAPZ-GEN-XXXXXXXX"
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    'Marking...'
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Mark Attendance
+                    </>
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+          
           <p className="text-sm text-muted-foreground mt-4 text-center">
-            Use the general attendance code to mark your daily attendance
+            Scan the QR code or enter the code manually to mark your attendance
           </p>
         </CardContent>
       </Card>
