@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { QrCode, Copy } from 'lucide-react';
+import { QrCode, Copy, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Course {
@@ -58,6 +59,29 @@ const QRCodeGenerator = () => {
     });
   };
 
+  const downloadQRCode = () => {
+    const svg = document.getElementById('course-qr-code');
+    if (!svg) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `attendance-qr-${selectedCourse}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -94,16 +118,32 @@ const QRCodeGenerator = () => {
 
         {qrCode && (
           <div className="space-y-4">
-            <div className="p-6 bg-muted rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-2">Attendance Code</p>
-              <p className="font-mono text-lg font-bold break-all">{qrCode}</p>
+            <div className="p-6 bg-white rounded-lg flex flex-col items-center justify-center">
+              <QRCodeSVG
+                id="course-qr-code"
+                value={qrCode}
+                size={200}
+                level="H"
+                includeMargin
+              />
+              <p className="text-sm text-muted-foreground mt-4">Scan to mark attendance</p>
             </div>
-            <Button variant="outline" onClick={copyToClipboard} className="w-full">
-              <Copy className="mr-2 h-4 w-4" />
-              Copy Code
-            </Button>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <p className="text-xs text-muted-foreground mb-1">Attendance Code</p>
+              <p className="font-mono text-sm font-bold break-all">{qrCode}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={copyToClipboard} className="flex-1">
+                <Copy className="mr-2 h-4 w-4" />
+                Copy
+              </Button>
+              <Button variant="outline" onClick={downloadQRCode} className="flex-1">
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </Button>
+            </div>
             <p className="text-sm text-muted-foreground text-center">
-              Share this code with students to mark their attendance
+              Share this QR code with students to mark their attendance
             </p>
           </div>
         )}
