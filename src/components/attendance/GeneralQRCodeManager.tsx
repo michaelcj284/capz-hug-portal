@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { QrCode, Copy, Plus, Power, PowerOff } from 'lucide-react';
+import { QrCode, Copy, Plus, Power, PowerOff, Download, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -141,6 +142,31 @@ const GeneralQRCodeManager = () => {
     });
   };
 
+  const downloadQRCode = (code: string, name: string) => {
+    const svg = document.getElementById(`qr-${code}`);
+    if (!svg) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `${name.replace(/\s+/g, '-')}-qr.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
+  const [viewQRCode, setViewQRCode] = useState<GeneralQRCode | null>(null);
+
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -241,6 +267,13 @@ const GeneralQRCodeManager = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => setViewQRCode(qr)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => copyToClipboard(qr.code)}
                           >
                             <Copy className="h-4 w-4" />
@@ -262,6 +295,45 @@ const GeneralQRCodeManager = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* QR Code View Dialog */}
+      <Dialog open={!!viewQRCode} onOpenChange={() => setViewQRCode(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{viewQRCode?.name}</DialogTitle>
+          </DialogHeader>
+          {viewQRCode && (
+            <div className="space-y-4 py-4">
+              <div className="p-6 bg-white rounded-lg flex flex-col items-center justify-center">
+                <QRCodeSVG
+                  id={`qr-${viewQRCode.code}`}
+                  value={viewQRCode.code}
+                  size={200}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-xs text-muted-foreground mb-1">Code</p>
+                <p className="font-mono text-sm font-bold break-all">{viewQRCode.code}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => copyToClipboard(viewQRCode.code)} className="flex-1">
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+                <Button variant="outline" onClick={() => downloadQRCode(viewQRCode.code, viewQRCode.name)} className="flex-1">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Scan this QR code to mark attendance
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
