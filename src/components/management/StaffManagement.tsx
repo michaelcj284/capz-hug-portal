@@ -19,10 +19,6 @@ const StaffManagement = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
   const fetchStaff = async () => {
     const { data, error } = await supabase
       .from('staff')
@@ -37,6 +33,30 @@ const StaffManagement = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchStaff();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('staff-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'staff'
+        },
+        () => {
+          fetchStaff();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   if (loading) {
     return <div className="text-center py-8">Loading staff...</div>;

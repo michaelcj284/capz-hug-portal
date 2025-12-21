@@ -19,10 +19,6 @@ const StudentManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
   const fetchStudents = async () => {
     const { data, error } = await supabase
       .from('students')
@@ -37,6 +33,30 @@ const StudentManagement = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchStudents();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('students-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'students'
+        },
+        () => {
+          fetchStudents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   if (loading) {
     return <div className="text-center py-8">Loading students...</div>;
