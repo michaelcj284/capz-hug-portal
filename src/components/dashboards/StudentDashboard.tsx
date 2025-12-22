@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import ChangePassword from '@/components/profile/ChangePassword';
 
 const StudentDashboard = () => {
   const { profile, signOut } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     enrolledCourses: 0,
     upcomingExams: 0,
@@ -24,12 +25,20 @@ const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<any>(null);
 
   useEffect(() => {
-    fetchStudentData();
+    if (profile?.id) {
+      fetchStudentData();
+    } else {
+      setLoading(false);
+    }
   }, [profile]);
 
   const fetchStudentData = async () => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
     try {
       const { data: student, error } = await supabase
         .from('students')
@@ -44,26 +53,64 @@ const StudentDashboard = () => {
 
       if (!error && student) {
         setStudentData(student);
-
-        const [enrollmentsResult, attendanceResult] = await Promise.all([
-          supabase.from('student_courses').select('id', { count: 'exact' }).eq('student_id', student.id),
-          supabase.from('attendance').select('status').eq('student_id', student.id),
-        ]);
-
-        const totalAttendance = attendanceResult.data?.length || 0;
-        const presentCount = attendanceResult.data?.filter((a: any) => a.status === 'present').length || 0;
-        const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
-
-        setStats({
-          enrolledCourses: enrollmentsResult.count || 0,
-          upcomingExams: 0,
-          attendanceRate,
-        });
+        await fetchStats(student.id);
       }
     } catch (error) {
       console.error('Error fetching student data:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const fetchStats = async (studentId: string) => {
+    const [enrollmentsResult, attendanceResult] = await Promise.all([
+      supabase.from('student_courses').select('id', { count: 'exact' }).eq('student_id', studentId),
+      supabase.from('attendance').select('status').eq('student_id', studentId),
+    ]);
+
+    const totalAttendance = attendanceResult.data?.length || 0;
+    const presentCount = attendanceResult.data?.filter((a: any) => a.status === 'present').length || 0;
+    const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
+
+    setStats({
+      enrolledCourses: enrollmentsResult.count || 0,
+      upcomingExams: 0,
+      attendanceRate,
+    });
+  };
+
+  const handleAttendanceMarked = () => {
+    if (studentData?.id) {
+      fetchStats(studentData.id);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-muted-foreground mb-4">No student record found for your account.</p>
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,8 +208,8 @@ const StudentDashboard = () => {
           </TabsContent>
           <TabsContent value="scan">
             <div className="space-y-6">
-              <QRCodeScanner studentId={studentData?.id} />
-              <GeneralAttendanceScanner userType="student" />
+              <QRCodeScanner studentId={studentData?.id} onAttendanceMarked={handleAttendanceMarked} />
+              <GeneralAttendanceScanner userType="student" onAttendanceMarked={handleAttendanceMarked} />
             </div>
           </TabsContent>
           <TabsContent value="certificates">
