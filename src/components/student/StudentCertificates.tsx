@@ -26,10 +26,14 @@ const StudentCertificates = ({ studentId }: StudentCertificatesProps) => {
   useEffect(() => {
     if (studentId) {
       fetchCertificates();
+    } else {
+      setLoading(false);
     }
   }, [studentId]);
 
   const fetchCertificates = async () => {
+    if (!studentId) return;
+    
     const { data, error } = await supabase
       .from('certificates')
       .select(`
@@ -57,6 +61,10 @@ const StudentCertificates = ({ studentId }: StudentCertificatesProps) => {
 
   if (loading) {
     return <div className="text-center py-8">Loading certificates...</div>;
+  }
+  
+  if (!studentId) {
+    return <div className="text-center py-8 text-muted-foreground">Student record not found.</div>;
   }
 
   return (

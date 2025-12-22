@@ -24,10 +24,35 @@ const StudentAttendance = ({ studentId }: StudentAttendanceProps) => {
   useEffect(() => {
     if (studentId) {
       fetchAttendance();
+      
+      // Subscribe to real-time updates
+      const channel = supabase
+        .channel('student-attendance-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'attendance',
+            filter: `student_id=eq.${studentId}`,
+          },
+          () => {
+            fetchAttendance();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      setLoading(false);
     }
   }, [studentId]);
 
   const fetchAttendance = async () => {
+    if (!studentId) return;
+    
     const { data, error } = await supabase
       .from('attendance')
       .select(`
@@ -58,6 +83,10 @@ const StudentAttendance = ({ studentId }: StudentAttendanceProps) => {
 
   if (loading) {
     return <div className="text-center py-8">Loading attendance...</div>;
+  }
+  
+  if (!studentId) {
+    return <div className="text-center py-8 text-muted-foreground">Student record not found.</div>;
   }
 
   // Calculate stats
