@@ -21,8 +21,6 @@ const StudentNotifications = () => {
   useEffect(() => {
     if (user) {
       fetchNotifications();
-    } else {
-      setLoading(false);
     }
   }, [user]);
 

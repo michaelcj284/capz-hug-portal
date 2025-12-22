@@ -26,8 +26,6 @@ const StudentCertificates = ({ studentId }: StudentCertificatesProps) => {
   useEffect(() => {
     if (studentId) {
       fetchCertificates();
-    } else {
-      setLoading(false);
     }
   }, [studentId]);
 

@@ -11,10 +11,9 @@ import QRCameraScanner from './QRCameraScanner';
 
 interface GeneralAttendanceScannerProps {
   userType: 'student' | 'instructor' | 'staff' | 'admin';
-  onAttendanceMarked?: () => void;
 }
 
-const GeneralAttendanceScanner = ({ userType, onAttendanceMarked }: GeneralAttendanceScannerProps) => {
+const GeneralAttendanceScanner = ({ userType }: GeneralAttendanceScannerProps) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -112,7 +111,6 @@ const GeneralAttendanceScanner = ({ userType, onAttendanceMarked }: GeneralAtten
         description: 'Your attendance has been recorded successfully',
       });
       setCode('');
-      onAttendanceMarked?.();
     }
 
     setLoading(false);
@@ -141,7 +139,7 @@ const GeneralAttendanceScanner = ({ userType, onAttendanceMarked }: GeneralAtten
             </TabsList>
             
             <TabsContent value="camera" className="mt-4">
-              <QRCameraScanner userType={userType} onAttendanceMarked={onAttendanceMarked} />
+              <QRCameraScanner userType={userType} />
             </TabsContent>
             
             <TabsContent value="manual" className="mt-4">

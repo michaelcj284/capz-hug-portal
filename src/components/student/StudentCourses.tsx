@@ -26,8 +26,6 @@ const StudentCourses = ({ studentId }: StudentCoursesProps) => {
   useEffect(() => {
     if (studentId) {
       fetchEnrollments();
-    } else {
-      setLoading(false);
     }
   }, [studentId]);
 

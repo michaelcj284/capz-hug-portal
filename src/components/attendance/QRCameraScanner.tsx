@@ -8,10 +8,9 @@ import { toast } from '@/hooks/use-toast';
 
 interface QRCameraScannerProps {
   userType: 'student' | 'instructor' | 'staff' | 'admin';
-  onAttendanceMarked?: () => void;
 }
 
-const QRCameraScanner = ({ userType, onAttendanceMarked }: QRCameraScannerProps) => {
+const QRCameraScanner = ({ userType }: QRCameraScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -155,7 +154,6 @@ const QRCameraScanner = ({ userType, onAttendanceMarked }: QRCameraScannerProps)
         title: 'Attendance Marked',
         description: 'Your attendance has been recorded successfully',
       });
-      onAttendanceMarked?.();
     }
 
     setLoading(false);

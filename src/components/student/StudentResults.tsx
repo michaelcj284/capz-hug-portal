@@ -28,8 +28,6 @@ const StudentResults = ({ studentId }: StudentResultsProps) => {
   useEffect(() => {
     if (studentId) {
       fetchResults();
-    } else {
-      setLoading(false);
     }
   }, [studentId]);
 

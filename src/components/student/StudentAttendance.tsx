@@ -24,8 +24,6 @@ const StudentAttendance = ({ studentId }: StudentAttendanceProps) => {
   useEffect(() => {
     if (studentId) {
       fetchAttendance();
-    } else {
-      setLoading(false);
     }
   }, [studentId]);
 
