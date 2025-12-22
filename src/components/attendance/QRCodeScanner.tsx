@@ -9,9 +9,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface QRCodeScannerProps {
   studentId?: string;
+  onAttendanceMarked?: () => void;
 }
 
-const QRCodeScanner = ({ studentId }: QRCodeScannerProps) => {
+const QRCodeScanner = ({ studentId, onAttendanceMarked }: QRCodeScannerProps) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -84,6 +85,7 @@ const QRCodeScanner = ({ studentId }: QRCodeScannerProps) => {
         description: 'Your attendance has been recorded successfully',
       });
       setCode('');
+      onAttendanceMarked?.();
     }
 
     setLoading(false);
