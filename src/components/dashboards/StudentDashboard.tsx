@@ -24,8 +24,52 @@ const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<any>(null);
 
   useEffect(() => {
-    fetchStudentData();
+    if (profile?.id) {
+      fetchStudentData();
+    }
   }, [profile]);
+
+  useEffect(() => {
+    if (!studentData?.id) return;
+
+    // Subscribe to real-time attendance updates to refresh stats
+    const channel = supabase
+      .channel('dashboard-attendance-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance',
+          filter: `student_id=eq.${studentData.id}`,
+        },
+        () => {
+          fetchStats(studentData.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [studentData?.id]);
+
+  const fetchStats = async (studentId: string) => {
+    const [enrollmentsResult, attendanceResult] = await Promise.all([
+      supabase.from('student_courses').select('id', { count: 'exact' }).eq('student_id', studentId),
+      supabase.from('attendance').select('status').eq('student_id', studentId),
+    ]);
+
+    const totalAttendance = attendanceResult.data?.length || 0;
+    const presentCount = attendanceResult.data?.filter((a: any) => a.status === 'present').length || 0;
+    const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
+
+    setStats({
+      enrolledCourses: enrollmentsResult.count || 0,
+      upcomingExams: 0,
+      attendanceRate,
+    });
+  };
 
   const fetchStudentData = async () => {
     if (!profile?.id) return;
@@ -44,21 +88,7 @@ const StudentDashboard = () => {
 
       if (!error && student) {
         setStudentData(student);
-
-        const [enrollmentsResult, attendanceResult] = await Promise.all([
-          supabase.from('student_courses').select('id', { count: 'exact' }).eq('student_id', student.id),
-          supabase.from('attendance').select('status').eq('student_id', student.id),
-        ]);
-
-        const totalAttendance = attendanceResult.data?.length || 0;
-        const presentCount = attendanceResult.data?.filter((a: any) => a.status === 'present').length || 0;
-        const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
-
-        setStats({
-          enrolledCourses: enrollmentsResult.count || 0,
-          upcomingExams: 0,
-          attendanceRate,
-        });
+        fetchStats(student.id);
       }
     } catch (error) {
       console.error('Error fetching student data:', error);

@@ -28,10 +28,14 @@ const StudentResults = ({ studentId }: StudentResultsProps) => {
   useEffect(() => {
     if (studentId) {
       fetchResults();
+    } else {
+      setLoading(false);
     }
   }, [studentId]);
 
   const fetchResults = async () => {
+    if (!studentId) return;
+    
     const { data, error } = await supabase
       .from('exam_results')
       .select(`
@@ -60,6 +64,10 @@ const StudentResults = ({ studentId }: StudentResultsProps) => {
 
   if (loading) {
     return <div className="text-center py-8">Loading results...</div>;
+  }
+  
+  if (!studentId) {
+    return <div className="text-center py-8 text-muted-foreground">Student record not found.</div>;
   }
 
   return (
