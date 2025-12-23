@@ -74,7 +74,7 @@ const CourseManagement = () => {
   }
 
   return (
-    <Card>
+    <Card className="max-w-5xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Course Management</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
