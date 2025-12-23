@@ -33,8 +33,8 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const [studentsResult, staffResult, coursesResult, examsResult] = await Promise.all([
-        supabase.from('students').select('id', { count: 'exact' }),
-        supabase.from('staff').select('id', { count: 'exact' }),
+        supabase.from('user_roles').select('id', { count: 'exact' }).eq('role', 'student'),
+        supabase.from('user_roles').select('id', { count: 'exact' }).in('role', ['staff', 'instructor']),
         supabase.from('courses').select('id', { count: 'exact' }),
         supabase.from('exams').select('id', { count: 'exact' }),
       ]);

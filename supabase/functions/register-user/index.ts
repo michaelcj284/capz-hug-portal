@@ -75,7 +75,17 @@ serve(async (req) => {
     }
 
     if (newUser.user) {
-      // Update user role
+      // Update the profile with the full name (the trigger creates profile but may not have full_name)
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ full_name: fullName })
+        .eq("id", newUser.user.id);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+
+      // Update user role (the trigger creates with 'student' default, so we update to correct role)
       const { error: roleUpdateError } = await supabaseAdmin
         .from("user_roles")
         .update({ role })
@@ -104,7 +114,8 @@ serve(async (req) => {
           .from("staff")
           .insert({
             user_id: newUser.user.id,
-            position: role === "instructor" ? "Instructor" : undefined,
+            position: role === "instructor" ? "Instructor" : "Staff",
+            department: role === "instructor" ? "Academic" : undefined,
           });
 
         if (staffError) {
