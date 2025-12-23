@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 
 const UserRegistration = () => {
-  const { profile } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -21,66 +19,31 @@ const UserRegistration = () => {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: { full_name: fullName },
-        },
+      // Use edge function to register user without affecting current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('register-user', {
+        body: { email, password, fullName, role },
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Update user role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .update({ role })
-          .eq('user_id', authData.user.id);
-
-        if (roleError) {
-          console.error('Error updating role:', roleError);
-        }
-
-        // Create appropriate record based on role
-        if (role === 'student') {
-          const studentNumber = `STU${Date.now().toString().slice(-8)}`;
-          const { error: studentError } = await supabase
-            .from('students')
-            .insert({
-              user_id: authData.user.id,
-              student_number: studentNumber,
-              registered_by: profile?.id,
-            });
-
-          if (studentError) {
-            console.error('Error creating student record:', studentError);
-          }
-        } else if (role === 'staff' || role === 'instructor') {
-          const { error: staffError } = await supabase
-            .from('staff')
-            .insert({
-              user_id: authData.user.id,
-              position: role === 'instructor' ? 'Instructor' : undefined,
-            });
-
-          if (staffError) {
-            console.error('Error creating staff record:', staffError);
-          }
-        }
-
-        toast({
-          title: 'User Registered',
-          description: `${fullName} has been registered as ${role}`,
-        });
-
-        // Reset form
-        setEmail('');
-        setPassword('');
-        setFullName('');
-        setRole('student');
+      if (response.error) {
+        throw new Error(response.error.message || 'Registration failed');
       }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({
+        title: 'User Registered',
+        description: `${fullName} has been registered as ${role}`,
+      });
+
+      // Reset form
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setRole('student');
     } catch (error: any) {
       toast({
         variant: 'destructive',
