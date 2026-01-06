@@ -4,13 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, GraduationCap, BookOpen, Calendar, QrCode, LogOut, UserPlus, Award } from 'lucide-react';
+import { Users, GraduationCap, BookOpen, Calendar, QrCode, LogOut, UserPlus, Award, FileText } from 'lucide-react';
 import StudentManagement from '@/components/management/StudentManagement';
 import UserRegistration from '@/components/management/UserRegistration';
 import StaffManagement from '@/components/management/StaffManagement';
 import CourseManagement from '@/components/management/CourseManagement';
 import ExamManagement from '@/components/management/ExamManagement';
 import AttendanceManagement from '@/components/management/AttendanceManagement';
+import AttendanceReport from '@/components/management/AttendanceReport';
 import QRCodeGenerator from '@/components/attendance/QRCodeGenerator';
 import GeneralQRCodeManager from '@/components/attendance/GeneralQRCodeManager';
 import GeneralAttendanceScanner from '@/components/attendance/GeneralAttendanceScanner';
@@ -113,7 +114,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="register" className="space-y-6">
-          <TabsList className="grid grid-cols-5 lg:grid-cols-11 gap-2 h-auto">
+          <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-2 h-auto">
             <TabsTrigger value="register" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
               <span className="hidden lg:inline">Register</span>
@@ -137,6 +138,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="attendance" className="flex items-center gap-2">
               <QrCode className="h-4 w-4" />
               <span className="hidden lg:inline">Attendance</span>
+            </TabsTrigger>
+            <TabsTrigger value="attendance-report" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden lg:inline">Report</span>
             </TabsTrigger>
             <TabsTrigger value="qrcode" className="flex items-center gap-2">
               <QrCode className="h-4 w-4" />
@@ -177,6 +182,9 @@ const AdminDashboard = () => {
           </TabsContent>
           <TabsContent value="attendance">
             <AttendanceManagement />
+          </TabsContent>
+          <TabsContent value="attendance-report">
+            <AttendanceReport />
           </TabsContent>
           <TabsContent value="qrcode">
             <QRCodeGenerator />
