@@ -11,6 +11,7 @@ interface Student {
   user_id: string;
   full_name: string | null;
   email: string;
+  courses: string[];
 }
 
 const StudentManagement = () => {
@@ -54,13 +55,37 @@ const StudentManagement = () => {
     // Get student records if they exist
     const { data: studentRecords } = await supabase
       .from('students')
-      .select('user_id, student_number, enrollment_date')
+      .select('id, user_id, student_number, enrollment_date')
       .in('user_id', userIds);
 
     const studentMap = new Map(studentRecords?.map(s => [s.user_id, s]) || []);
+    const studentIds = studentRecords?.map(s => s.id) || [];
+
+    // Get course enrollments for students
+    let courseMap = new Map<string, string[]>();
+    if (studentIds.length > 0) {
+      const { data: enrollments } = await supabase
+        .from('student_courses')
+        .select('student_id, course:courses(name)')
+        .in('student_id', studentIds);
+
+      if (enrollments) {
+        enrollments.forEach((e: any) => {
+          const studentId = e.student_id;
+          const courseName = e.course?.name;
+          if (courseName) {
+            if (!courseMap.has(studentId)) {
+              courseMap.set(studentId, []);
+            }
+            courseMap.get(studentId)!.push(courseName);
+          }
+        });
+      }
+    }
 
     const studentList: Student[] = (profiles || []).map(p => {
       const studentRecord = studentMap.get(p.id);
+      const courses = studentRecord ? courseMap.get(studentRecord.id) || [] : [];
       return {
         id: p.id,
         user_id: p.id,
@@ -68,6 +93,7 @@ const StudentManagement = () => {
         email: p.email,
         student_number: studentRecord?.student_number || null,
         enrollment_date: studentRecord?.enrollment_date || p.created_at,
+        courses,
       };
     });
 
@@ -103,6 +129,17 @@ const StudentManagement = () => {
           fetchStudents();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'student_courses'
+        },
+        () => {
+          fetchStudents();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -129,6 +166,7 @@ const StudentManagement = () => {
                 <TableHead>Student Number</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Courses Enrolled</TableHead>
                 <TableHead>Enrollment Date</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
@@ -139,6 +177,19 @@ const StudentManagement = () => {
                   <TableCell className="font-mono">{student.student_number || 'N/A'}</TableCell>
                   <TableCell>{student.full_name || 'N/A'}</TableCell>
                   <TableCell>{student.email}</TableCell>
+                  <TableCell>
+                    {student.courses.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {student.courses.map((course, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {course}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No courses</span>
+                    )}
+                  </TableCell>
                   <TableCell>{student.enrollment_date ? new Date(student.enrollment_date).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">Active</Badge>

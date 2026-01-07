@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface StaffMember {
   id: string;
+  staffId: string | null;
   user_id: string;
   full_name: string | null;
   email: string;
   department: string | null;
   position: string | null;
   role: string;
+  courses: string[];
 }
 
 const StaffManagement = () => {
@@ -56,21 +58,47 @@ const StaffManagement = () => {
     // Get staff records if they exist
     const { data: staffRecords } = await supabase
       .from('staff')
-      .select('user_id, department, position')
+      .select('id, user_id, department, position')
       .in('user_id', userIds);
 
     const staffMap = new Map(staffRecords?.map(s => [s.user_id, s]) || []);
+    const staffIds = staffRecords?.map(s => s.id) || [];
+
+    // Get courses assigned to instructors
+    let courseMap = new Map<string, string[]>();
+    if (staffIds.length > 0) {
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('instructor_id, name')
+        .in('instructor_id', staffIds);
+
+      if (courses) {
+        courses.forEach((c: any) => {
+          const instructorId = c.instructor_id;
+          const courseName = c.name;
+          if (courseName && instructorId) {
+            if (!courseMap.has(instructorId)) {
+              courseMap.set(instructorId, []);
+            }
+            courseMap.get(instructorId)!.push(courseName);
+          }
+        });
+      }
+    }
 
     const staffList: StaffMember[] = (profiles || []).map(p => {
       const staffRecord = staffMap.get(p.id);
+      const courses = staffRecord ? courseMap.get(staffRecord.id) || [] : [];
       return {
         id: p.id,
+        staffId: staffRecord?.id || null,
         user_id: p.id,
         full_name: p.full_name,
         email: p.email,
         department: staffRecord?.department || null,
         position: staffRecord?.position || null,
         role: roleMap.get(p.id) || 'staff',
+        courses,
       };
     });
 
@@ -106,6 +134,17 @@ const StaffManagement = () => {
           fetchStaff();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'courses'
+        },
+        () => {
+          fetchStaff();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -132,6 +171,7 @@ const StaffManagement = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Courses Assigned</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Status</TableHead>
@@ -146,6 +186,19 @@ const StaffManagement = () => {
                     <Badge variant={member.role === 'instructor' ? 'default' : 'secondary'}>
                       {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {member.courses.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {member.courses.map((course, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {course}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No courses</span>
+                    )}
                   </TableCell>
                   <TableCell>{member.department || 'Not set'}</TableCell>
                   <TableCell>{member.position || 'Not set'}</TableCell>
