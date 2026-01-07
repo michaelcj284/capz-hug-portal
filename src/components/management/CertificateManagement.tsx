@@ -100,7 +100,7 @@ const CertificateManagement = () => {
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" />Issue Certificate</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="top-[10%] translate-y-0 max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Issue New Certificate</DialogTitle>
             </DialogHeader>
@@ -111,12 +111,18 @@ const CertificateManagement = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select student" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {(student.profiles as any)?.full_name} ({student.student_number})
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="max-h-60">
+                    {students.length === 0 ? (
+                      <div className="py-2 px-2 text-sm text-muted-foreground text-center">
+                        No students found
+                      </div>
+                    ) : (
+                      students.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {(student.profiles as any)?.full_name || 'Unknown'} ({student.student_number})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
