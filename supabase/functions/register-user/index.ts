@@ -50,7 +50,7 @@ serve(async (req) => {
       );
     }
 
-    const { email, password, fullName, role } = await req.json();
+    const { email, password, fullName, role, courseIds } = await req.json();
 
     if (!email || !password || !fullName || !role) {
       return new Response(
@@ -58,6 +58,8 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`Registering new user: ${email} with role: ${role}`);
 
     // Create user using admin API (doesn't affect current session)
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -68,6 +70,7 @@ serve(async (req) => {
     });
 
     if (createError) {
+      console.error("Error creating user:", createError);
       return new Response(
         JSON.stringify({ error: createError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -75,7 +78,9 @@ serve(async (req) => {
     }
 
     if (newUser.user) {
-      // Update the profile with the full name (the trigger creates profile but may not have full_name)
+      console.log(`User created with ID: ${newUser.user.id}`);
+
+      // Update the profile with the full name
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
         .update({ full_name: fullName })
@@ -85,7 +90,7 @@ serve(async (req) => {
         console.error("Error updating profile:", profileError);
       }
 
-      // Update user role (the trigger creates with 'student' default, so we update to correct role)
+      // Update user role
       const { error: roleUpdateError } = await supabaseAdmin
         .from("user_roles")
         .update({ role })
@@ -98,28 +103,61 @@ serve(async (req) => {
       // Create appropriate record based on role
       if (role === "student") {
         const studentNumber = `STU${Date.now().toString().slice(-8)}`;
-        const { error: studentError } = await supabaseAdmin
+        const { data: studentData, error: studentError } = await supabaseAdmin
           .from("students")
           .insert({
             user_id: newUser.user.id,
             student_number: studentNumber,
             registered_by: requestingUser.id,
-          });
+          })
+          .select('id')
+          .single();
 
         if (studentError) {
           console.error("Error creating student record:", studentError);
+        } else if (studentData && courseIds && courseIds.length > 0) {
+          // Enroll student in selected courses
+          console.log(`Enrolling student in ${courseIds.length} courses`);
+          const enrollments = courseIds.map((courseId: string) => ({
+            student_id: studentData.id,
+            course_id: courseId,
+            status: 'active',
+          }));
+
+          const { error: enrollError } = await supabaseAdmin
+            .from("student_courses")
+            .insert(enrollments);
+
+          if (enrollError) {
+            console.error("Error enrolling student in courses:", enrollError);
+          }
         }
       } else if (role === "staff" || role === "instructor") {
-        const { error: staffError } = await supabaseAdmin
+        const { data: staffData, error: staffError } = await supabaseAdmin
           .from("staff")
           .insert({
             user_id: newUser.user.id,
             position: role === "instructor" ? "Instructor" : "Staff",
             department: role === "instructor" ? "Academic" : undefined,
-          });
+          })
+          .select('id')
+          .single();
 
         if (staffError) {
           console.error("Error creating staff record:", staffError);
+        } else if (staffData && role === "instructor" && courseIds && courseIds.length > 0) {
+          // Assign instructor to selected courses
+          console.log(`Assigning instructor to ${courseIds.length} courses`);
+          for (const courseId of courseIds) {
+            const { error: courseUpdateError } = await supabaseAdmin
+              .from("courses")
+              .update({ instructor_id: staffData.id })
+              .eq("id", courseId);
+
+            if (courseUpdateError) {
+              console.error(`Error assigning instructor to course ${courseId}:`, courseUpdateError);
+            }
+          }
         }
       }
     }
