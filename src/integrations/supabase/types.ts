@@ -267,6 +267,7 @@ export type Database = {
         Row: {
           attendance_date: string
           check_in_time: string
+          check_out_time: string | null
           created_at: string
           id: string
           qr_code_id: string
@@ -276,6 +277,7 @@ export type Database = {
         Insert: {
           attendance_date?: string
           check_in_time?: string
+          check_out_time?: string | null
           created_at?: string
           id?: string
           qr_code_id: string
@@ -285,6 +287,7 @@ export type Database = {
         Update: {
           attendance_date?: string
           check_in_time?: string
+          check_out_time?: string | null
           created_at?: string
           id?: string
           qr_code_id?: string

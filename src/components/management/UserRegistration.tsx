@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+interface Course {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
 const UserRegistration = () => {
   const [email, setEmail] = useState('');
@@ -13,17 +21,45 @@ const UserRegistration = () => {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'admin' | 'staff' | 'student' | 'instructor'>('student');
   const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('id, name, description')
+      .order('name');
+    
+    if (data && !error) {
+      setCourses(data);
+    }
+  };
+
+  const handleCourseToggle = (courseId: string) => {
+    setSelectedCourses(prev => 
+      prev.includes(courseId) 
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Use edge function to register user without affecting current session
-      const { data: sessionData } = await supabase.auth.getSession();
-      
       const response = await supabase.functions.invoke('register-user', {
-        body: { email, password, fullName, role },
+        body: { 
+          email, 
+          password, 
+          fullName, 
+          role,
+          courseIds: selectedCourses
+        },
       });
 
       if (response.error) {
@@ -36,7 +72,7 @@ const UserRegistration = () => {
 
       toast({
         title: 'User Registered',
-        description: `${fullName} has been registered as ${role}`,
+        description: `${fullName} has been registered as ${role}${selectedCourses.length > 0 ? ` with ${selectedCourses.length} course(s) assigned` : ''}`,
       });
 
       // Reset form
@@ -44,6 +80,7 @@ const UserRegistration = () => {
       setPassword('');
       setFullName('');
       setRole('student');
+      setSelectedCourses([]);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -54,6 +91,8 @@ const UserRegistration = () => {
       setLoading(false);
     }
   };
+
+  const showCourseSelection = role === 'student' || role === 'instructor';
 
   return (
     <Card>
@@ -98,7 +137,10 @@ const UserRegistration = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(v: any) => setRole(v)}>
+              <Select value={role} onValueChange={(v: any) => {
+                setRole(v);
+                setSelectedCourses([]); // Reset course selection when role changes
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -111,6 +153,52 @@ const UserRegistration = () => {
               </Select>
             </div>
           </div>
+
+          {/* Course Assignment Section */}
+          {showCourseSelection && courses.length > 0 && (
+            <div className="space-y-2">
+              <Label>
+                {role === 'student' ? 'Enroll in Courses' : 'Assign to Courses (as instructor)'}
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {role === 'student' 
+                  ? 'Select courses to enroll this student in'
+                  : 'Select courses this instructor will teach'}
+              </p>
+              <ScrollArea className="h-48 border rounded-md p-4">
+                <div className="space-y-3">
+                  {courses.map((course) => (
+                    <div key={course.id} className="flex items-start space-x-3">
+                      <Checkbox
+                        id={`course-${course.id}`}
+                        checked={selectedCourses.includes(course.id)}
+                        onCheckedChange={() => handleCourseToggle(course.id)}
+                      />
+                      <div className="grid gap-1 leading-none">
+                        <label
+                          htmlFor={`course-${course.id}`}
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          {course.name}
+                        </label>
+                        {course.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {course.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              {selectedCourses.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedCourses.length} course(s) selected
+                </p>
+              )}
+            </div>
+          )}
+
           <Button type="submit" disabled={loading}>
             {loading ? 'Registering...' : 'Register User'}
           </Button>
